@@ -1,0 +1,99 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+ 
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 262 83% 58%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 217 91% 60%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 160 84% 39%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 262 83% 58%;
+    --radius: 0.75rem;
+  }
+}
+ 
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+.scale-animation {
+  @apply transition-transform duration-200 hover:scale-105;
+}
+
+.bounce-animation {
+  animation: bounce 0.5s;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+/* Add custom styles for the game interface */
+.table-container {
+  @apply overflow-x-auto shadow-lg rounded-lg;
+}
+
+.game-button {
+  @apply transition-colors duration-200 hover:bg-primary/90;
+}
+
+/* Responsive table styles */
+.results-grid {
+  @apply w-full overflow-x-auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.results-grid table {
+  @apply w-full border-collapse;
+  table-layout: fixed;
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  .results-grid table {
+    font-size: 0.75rem;
+  }
+  
+  .results-grid td,
+  .results-grid th {
+    @apply p-1;
+  }
+}
+
+/* Ensure table headers are always visible */
+.results-grid thead {
+  @apply sticky top-0 z-10;
+}
+
+/* Enhance table cell visibility */
+.results-grid td, 
+.results-grid th {
+  @apply border-b border-slate-200;
+}
+
