@@ -77,7 +77,7 @@
 /* Mobile optimizations */
 @media (max-width: 640px) {
   .results-grid table {
-    font-size: 1.75rem;
+    font-size: 3rem;
   }
   
   .results-grid td,
