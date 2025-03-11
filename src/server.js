@@ -69,4 +69,19 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
-  
+  // Fetch game history for the authenticated user
+app.get('/game-history', verifyIdToken, async (req, res) => {
+  const user_id = req.user.uid; // Get UID from Firebase token
+
+  try {
+    const text = 'SELECT * FROM game_history WHERE user_id = $1 ORDER BY created_at DESC';
+    const values = [user_id];
+
+    const result = await query(text, values);
+    res.status(200).json(result.rows); // Return the game history as a response
+  } catch (error) {
+    console.error('Error fetching game history:', error);
+    res.status(500).json({ error: 'Error fetching game history' });
+  }
+});
+    
