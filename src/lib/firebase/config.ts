@@ -1,8 +1,3 @@
-import { initializeApp } from "firebase/app";
-import { getAuth, browserLocalPersistence, setPersistence, GoogleAuthProvider } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
-
 // Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyB_vEBMO97LCbtm9-uJg2bcC87uoLDohGw",
@@ -14,10 +9,18 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-export const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const storage = getStorage(app);
+import { initializeApp } from "firebase/app";
+import { getAuth, browserLocalPersistence, setPersistence, GoogleAuthProvider } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
+
+// Initialize Firebase App
+const app = initializeApp(firebaseConfig);
+
+// Initialize Firebase services
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
 
 // Set persistence to LOCAL to keep user logged in
 setPersistence(auth, browserLocalPersistence).catch((error) => {
@@ -25,7 +28,10 @@ setPersistence(auth, browserLocalPersistence).catch((error) => {
 });
 
 // Configure Google provider
-export const googleProvider = new GoogleAuthProvider();
+const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({
   prompt: 'select_account'
 });
+
+// Export for use in other files
+export { app, auth, db, storage, googleProvider };
