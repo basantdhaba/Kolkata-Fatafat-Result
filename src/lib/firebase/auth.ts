@@ -1,15 +1,14 @@
-
 import { 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword, 
   signOut, 
   onAuthStateChanged, 
   User, 
-  signInWithPopup,
-  fetchSignInMethodsForEmail
+  signInWithPopup 
 } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { auth, googleProvider, db } from "./config";
+import axios from 'axios';  // Import axios for making HTTP requests to Neon
 
 // Helper function to check if user is authenticated
 export const isAuthenticated = (): boolean => {
@@ -79,3 +78,36 @@ export const logOut = async () => {
 export const onAuthStateChange = (callback: (user: User | null) => void) => {
   return onAuthStateChanged(auth, callback);
 };
+
+// Function to store game data in Neon
+export const storeGameDataInNeon = async (userId: string, gameData: any) => {
+  try {
+    // Send data to your Neon database via API (assuming you have a backend API for Neon)
+    await axios.post('YOUR_SERVER_ENDPOINT_HERE', { 
+      user_id: userId, 
+      game_data: gameData 
+    });
+
+    console.log('Game data successfully stored in Neon!');
+  } catch (error) {
+    console.error('Error storing game data in Neon:', error);
+  }
+};
+
+// Example: Use this inside onAuthStateChanged or another relevant place
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    const userId = user.uid;
+    const gameData = {
+      game_name: 'Kolkata Fatafat',
+      round: 3,
+      bet_type: 'Single',
+      played_number: '5',
+      bet_amount: 50.00,
+    };
+
+    // Store game data in Neon after authentication
+    await storeGameDataInNeon(userId, gameData);
+  }
+});
+    
