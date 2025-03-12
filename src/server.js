@@ -16,7 +16,7 @@ const { auth } = admin;
 
 // Initialize the database pool connection
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: process.env.NEON_DATABASE_URL,
 });
 
 // Query function to interact with the database
@@ -64,12 +64,7 @@ app.post('/store-game-data', verifyIdToken, async (req, res) => {
   }
 });
 
-// Start the server
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
-  // Fetch game history for the authenticated user
+// Fetch game history for the authenticated user
 app.get('/game-history', verifyIdToken, async (req, res) => {
   const user_id = req.user.uid; // Get UID from Firebase token
 
@@ -84,4 +79,9 @@ app.get('/game-history', verifyIdToken, async (req, res) => {
     res.status(500).json({ error: 'Error fetching game history' });
   }
 });
-    
+
+// Start the server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
+});
