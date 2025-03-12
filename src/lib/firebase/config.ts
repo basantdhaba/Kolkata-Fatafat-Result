@@ -1,11 +1,12 @@
 // Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyB_vEBMO97LCbtm9-uJg2bcC87uoLDohGw",
-  authDomain: "number-quest-winner.firebaseapp.com",
-  projectId: "number-quest-winner",
-  storageBucket: "number-quest-winner.firebasestorage.app",
-  messagingSenderId: "668581172709",
-  appId: "1:668581172709:web:6c2265980ea54a77630b0c"
+  apiKey: "AIzaSyDorK9Drh--JI-PVLp3yKnXwEAshpBNd2Q",
+  authDomain: "kolkata-fatafat-result-1st.firebaseapp.com",
+  projectId: "kolkata-fatafat-result-1st",
+  storageBucket: "kolkata-fatafat-result-1st.firebasestorage.app",
+  messagingSenderId: "1064544927762",
+  appId: "1:1064544927762:web:8de0a6261f3fcca95a98cb",
+  measurementId: "G-X9722PX3KQ"
 };
 
 // Initialize Firebase
