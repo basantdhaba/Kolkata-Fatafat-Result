@@ -115,6 +115,26 @@ app.get('/wallet-data', verifyIdToken, async (req, res) => {
   }
 });
 
+// Check Firebase connection
+app.get('/check-firebase', async (req, res) => {
+  try {
+    const userRecord = await auth.getUserByEmail('test@example.com');
+    res.status(200).json({ success: true, message: 'Firebase is connected', user: userRecord });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Firebase is not connected', error: error.message });
+  }
+});
+
+// Check Neon (Postgres) connection
+app.get('/check-database', async (req, res) => {
+  try {
+    const result = await query('SELECT NOW()');
+    res.status(200).json({ success: true, message: 'Database is connected', time: result.rows[0] });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Database is not connected', error: error.message });
+  }
+});
+
 // Start the server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
