@@ -80,6 +80,41 @@ app.get('/game-history', verifyIdToken, async (req, res) => {
   }
 });
 
+// Store user wallet data (with Firebase Authentication user verification)
+app.post('/store-wallet-data', verifyIdToken, async (req, res) => {
+  const { wallet_data } = req.body;
+  const user_id = req.user.uid; // Get UID from decoded token (Firebase Auth)
+
+  // Example query to insert wallet data
+  try {
+    const text = 'INSERT INTO user_wallet(user_id, wallet_data) VALUES($1, $2)';
+    const values = [user_id, wallet_data];
+    
+    await query(text, values);
+
+    res.status(200).json({ success: true, message: 'Wallet data stored successfully!' });
+  } catch (error) {
+    console.error('Error storing wallet data:', error);
+    res.status(500).json({ error: 'Error storing wallet data' });
+  }
+});
+
+// Fetch user wallet data for the authenticated user
+app.get('/wallet-data', verifyIdToken, async (req, res) => {
+  const user_id = req.user.uid; // Get UID from Firebase token
+
+  try {
+    const text = 'SELECT * FROM user_wallet WHERE user_id = $1 ORDER BY created_at DESC';
+    const values = [user_id];
+
+    const result = await query(text, values);
+    res.status(200).json(result.rows); // Return the wallet data as a response
+  } catch (error) {
+    console.error('Error fetching wallet data:', error);
+    res.status(500).json({ error: 'Error fetching wallet data' });
+  }
+});
+
 // Start the server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
