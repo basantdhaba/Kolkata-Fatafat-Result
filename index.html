@@ -1,42 +1,70 @@
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-analytics.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
 
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>number-quest-winner</title>
-    <meta name="description" content="Lovable Generated Project" />
-    <meta name="author" content="Lovable" />
-    <meta property="og:image" content="/og-image.png" />
-    <!-- Firebase SDK -->
-    <script type="module">
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
-      import { getAuth } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-auth.js";
-      import { getFirestore } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
+  // Firebase Configuration
+  const firebaseConfig = {
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: import.meta.env.VITE_FIREBASE_APP_ID,
+    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+  };
 
-      // Firebase Configuration
-      const firebaseConfig = {
-        apiKey: "AIzaSyB_vEBMO97LCbtm9-uJg2bcC87uoLDohGw",
-        authDomain: "number-quest-winner.firebaseapp.com",
-        projectId: "number-quest-winner",
-        storageBucket: "number-quest-winner.firebasestorage.app",
-        messagingSenderId: "668581172709",
-        appId: "1:668581172709:web:6c2265980ea54a77630b0c"
-      };
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
 
-      // Initialize Firebase
-      const app = initializeApp(firebaseConfig);
-      const auth = getAuth(app);
-      const db = getFirestore(app);
+  // Initialize Firebase Authentication and get a reference to the service
+  const auth = getAuth(app);
 
-      // Make Firebase available globally
-      window.firebase = { app, auth, db };
-    </script>
-  </head>
+  // Function to handle sign up
+  const signUp = (email, password) => {
+    createUserWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        // Signed up
+        const user = userCredential.user;
+        console.log('User signed up:', user);
+      })
+      .catch((error) => {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        console.error('Error signing up:', errorCode, errorMessage);
+      });
+  };
 
-  <body>
-    <div id="root"></div>
-    <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
-</html>
+  // Function to handle login
+  const login = (email, password) => {
+    signInWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        // Logged in
+        const user = userCredential.user;
+        console.log('User logged in:', user);
+      })
+      .catch((error) => {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        console.error('Error logging in:', errorCode, errorMessage);
+      });
+  };
+
+  // Function to handle logout
+  const logout = () => {
+    signOut(auth)
+      .then(() => {
+        // Logged out
+        console.log('User logged out');
+      })
+      .catch((error) => {
+        console.error('Error logging out:', error);
+      });
+  };
+
+  // Example usage:
+  // signUp('test@example.com', 'password123');
+  // login('test@example.com', 'password123');
+  // logout();
+</script>
