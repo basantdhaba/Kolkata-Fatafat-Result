@@ -1,123 +1,163 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from 'react';
+import { toast } from 'react-hot-toast';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
-import { Game } from "@/types/game";
-import { updateGameResult } from "@/lib/firebase";
+import { useForm } from "react-hook-form";
+import { updateGameResult } from '@/lib/firebase/results/update';
+import { Loader2 } from "lucide-react";
 
-interface ResultFormProps {
-  games: Game[];
-  onResultUpdated: (gameId: string, roundNumber: number) => void;
-  setLoading: (loading: boolean) => void;
-  loading: boolean;
+interface ResultFormData {
+  gameId: string;
+  roundNumber: number;
+  result: string;
 }
 
-const ResultForm = ({ games, onResultUpdated, setLoading, loading }: ResultFormProps) => {
-  const [selectedGame, setSelectedGame] = useState("");
-  const [selectedRound, setSelectedRound] = useState("");
-  const [result, setResult] = useState("");
+const ResultForm = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [lastResult, setLastResult] = useState<string | null>(null);
 
-  const handleResultUpdate = async () => {
-    if (!selectedGame || !selectedRound || !result) {
-      toast.error("Please fill all fields");
-      return;
+  const form = useForm<ResultFormData>({
+    defaultValues: {
+      gameId: '',
+      roundNumber: 1,
+      result: ''
     }
+  });
 
-    if (result.length !== 3) {
-      toast.error("Result must be 3 digits");
-      return;
-    }
-
+  const onSubmit = async (data: ResultFormData) => {
+    setIsLoading(true);
     try {
-      setLoading(true);
-      console.log("Updating result for game:", selectedGame, "round:", selectedRound, "result:", result);
+      console.log('Submitting result:', data);
       
-      // Pass the result exactly as entered - don't sort or modify
-      const success = await updateGameResult(selectedGame, parseInt(selectedRound), result);
-      
-      if (success) {
-        toast.success("Result updated and winnings processed");
-        setResult("");
-        
-        // Notify parent to load backups
-        onResultUpdated(selectedGame, parseInt(selectedRound));
+      // Validate result format (should be a number)
+      if (!/^\d+$/.test(data.result)) {
+        toast.error('Result must be a number');
+        return;
+      }
+
+      // Convert roundNumber to number if it's a string
+      const roundNum = Number(data.roundNumber);
+      if (isNaN(roundNum)) {
+        toast.error('Invalid round number');
+        return;
+      }
+
+      const response = await updateGameResult(
+        data.gameId,
+        roundNum,
+        data.result
+      );
+
+      if (response.success) {
+        toast.success('Result updated successfully');
+        setLastResult(data.result);
+        // Reset only the result field
+        form.reset({
+          ...data,
+          result: ''
+        });
       } else {
-        toast.error("Failed to update result");
+        toast.error(`Failed to update result: ${response.error}`);
       }
     } catch (error) {
-      console.error('Error in handleResultUpdate:', error);
-      toast.error("Error updating result: " + (error instanceof Error ? error.message : String(error)));
+      console.error('Error submitting result:', error);
+      toast.error('An error occurred while updating the result');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <Label>Select Game</Label>
-          <select 
-            className="w-full border rounded-md p-2"
-            value={selectedGame}
-            onChange={(e) => setSelectedGame(e.target.value)}
-          >
-            <option value="">Select game</option>
-            {games.map((game) => (
-              <option key={game.id} value={game.id}>
-                {game.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <Label>Select Round</Label>
-          <select
-            className="w-full border rounded-md p-2"
-            value={selectedRound}
-            onChange={(e) => setSelectedRound(e.target.value)}
-          >
-            <option value="">Select round</option>
-            {selectedGame && 
-              games
-                .find((g) => g.id.toString() === selectedGame)
-                ?.roundTimings.map((round) => (
-                  <option key={round.roundNumber} value={round.roundNumber}>
-                    Round {round.roundNumber}
-                  </option>
-                ))}
-          </select>
-        </div>
-        <div>
-          <Label>Result (3 digits)</Label>
-          <Input
-            type="text"
-            value={result}
-            onChange={(e) => setResult(e.target.value)}
-            maxLength={3}
-            placeholder="Enter result"
-          />
-        </div>
-      </div>
-      <div className="flex gap-2">
-        <Button 
-          onClick={handleResultUpdate} 
-          className="w-full"
-          disabled={loading}
-        >
-          {loading ? "Processing..." : "Update Result & Process Winnings"}
-        </Button>
-        <Button 
-          onClick={() => onResultUpdated(selectedGame, parseInt(selectedRound))} 
-          variant="outline"
-          disabled={loading || !selectedGame || !selectedRound}
-        >
-          View Backups
-        </Button>
-      </div>
-    </div>
+    <Card className="w-full max-w-md mx-auto">
+      <CardHeader>
+        <CardTitle>Update Game Result</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="gameId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Game ID</FormLabel>
+                  <FormControl>
+                    <Input {...field} disabled={isLoading} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="roundNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Round Number</FormLabel>
+                  <FormControl>
+                    <Input 
+                      {...field} 
+                      type="number" 
+                      min={1} 
+                      disabled={isLoading}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="result"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Result</FormLabel>
+                  <FormControl>
+                    <Input {...field} disabled={isLoading} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <Button type="submit" disabled={isLoading} className="w-full">
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Updating...
+                </>
+              ) : (
+                'Update Result'
+              )}
+            </Button>
+
+            {lastResult && (
+              <div className="mt-4 p-2 bg-green-50 dark:bg-green-900 rounded">
+                <p className="text-sm text-green-600 dark:text-green-200">
+                  Last Updated Result: {lastResult}
+                </p>
+              </div>
+            )}
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
   );
 };
 
