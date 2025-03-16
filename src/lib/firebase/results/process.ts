@@ -1,4 +1,3 @@
-
 import { 
   collection, 
   query, 
@@ -6,12 +5,12 @@ import {
   getDocs,
   doc,
   writeBatch,
-  serverTimestamp
+  serverTimestamp,
+  Timestamp
 } from "firebase/firestore";
 import { db } from "../config";
 import { updateUserWallet } from "../profile";
 
-// Process bets for a game result
 export const processBetsForResult = async (gameId: string, roundNumber: number, result: string) => {
   try {
     console.log(`Processing bets for game ${gameId}, round ${roundNumber}, result ${result}`);
@@ -28,65 +27,79 @@ export const processBetsForResult = async (gameId: string, roundNumber: number, 
     console.log(`Found ${querySnapshot.docs.length} pending bets to process`);
     
     const batch = writeBatch(db);
-    
-    // Track users who need wallet updates
     const walletUpdates: Record<string, number> = {};
+    let processedBets = 0;
     
     // Process each bet
     for (const betDoc of querySnapshot.docs) {
-      const bet = betDoc.data();
-      let won = false;
-      let winAmount = 0;
-      
-      // Calculate if bet won based on bet type
-      if (bet.type === 'single' && bet.number === result[result.length - 1]) {
-        won = true;
-        winAmount = Number(bet.amount) * (bet.win_rate || 9);
-      } else if (bet.type === 'patti' && bet.number === result) {
-        won = true;
-        winAmount = Number(bet.amount) * (bet.win_rate || 90);
-      } else if (bet.type === 'juri') {
-        // Fix juri result calculation
-        const [first, second] = (bet.combination || bet.number || '').split('-');
-        const lastDigit = result[result.length - 1];
+      try {
+        const bet = betDoc.data();
+        let won = false;
+        let winAmount = 0;
         
-        if (first === lastDigit || second === lastDigit) {
+        // Calculate if bet won based on bet type
+        if (bet.type === 'single' && bet.number === result[result.length - 1]) {
           won = true;
           winAmount = Number(bet.amount) * (bet.win_rate || 9);
+        } else if (bet.type === 'patti' && bet.number === result) {
+          won = true;
+          winAmount = Number(bet.amount) * (bet.win_rate || 90);
+        } else if (bet.type === 'juri') {
+          const [first, second] = (bet.combination || bet.number || '').split('-');
+          const lastDigit = result[result.length - 1];
+          
+          if (first === lastDigit || second === lastDigit) {
+            won = true;
+            winAmount = Number(bet.amount) * (bet.win_rate || 9);
+          }
         }
-      }
-      
-      console.log(`Bet ${betDoc.id}: type=${bet.type}, number=${bet.number || bet.combination}, result=${result}, won=${won}, winAmount=${winAmount}`);
-      
-      // Update the bet document
-      const betRef = doc(db, "bets", betDoc.id);
-      batch.update(betRef, {
-        status: won ? 'Won' : 'Lost',
-        result: result,
-        win_amount: won ? winAmount : 0,
-        is_winner: won,
-        processed_at: serverTimestamp()
-      });
-      
-      // Track wallet updates for winners
-      if (won && bet.user_id) {
-        if (!walletUpdates[bet.user_id]) {
-          walletUpdates[bet.user_id] = 0;
+        
+        // Update the bet document
+        const betRef = doc(db, "bets", betDoc.id);
+        batch.update(betRef, {
+          status: won ? 'Won' : 'Lost',
+          result: result,
+          win_amount: won ? winAmount : 0,
+          is_winner: won,
+          processed_at: serverTimestamp(),
+          utc_processed: Timestamp.fromDate(new Date()),
+          ist_processed: Timestamp.fromDate(new Date(Date.now() + (5.5 * 60 * 60 * 1000)))
+        });
+        
+        // Track wallet updates for winners
+        if (won && bet.user_id) {
+          if (!walletUpdates[bet.user_id]) {
+            walletUpdates[bet.user_id] = 0;
+          }
+          walletUpdates[bet.user_id] += winAmount;
         }
-        walletUpdates[bet.user_id] += winAmount;
+        
+        processedBets++;
+      } catch (betError) {
+        console.error(`Error processing bet ${betDoc.id}:`, betError);
+        continue;
       }
     }
     
     // Commit the batch update
-    await batch.commit();
-    console.log(`Batch update committed for ${querySnapshot.docs.length} bets`);
-    
-    // Process wallet updates for winners
-    console.log(`Processing wallet updates for ${Object.keys(walletUpdates).length} users`);
-    for (const userId in walletUpdates) {
-      await updateUserWallet(userId, walletUpdates[userId]);
+    if (processedBets > 0) {
+      await batch.commit();
+      console.log(`Batch update committed for ${processedBets} bets`);
     }
     
+    // Process wallet updates for winners
+    let updatedWallets = 0;
+    for (const userId in walletUpdates) {
+      try {
+        await updateUserWallet(userId, walletUpdates[userId]);
+        updatedWallets++;
+      } catch (walletError) {
+        console.error(`Error updating wallet for user ${userId}:`, walletError);
+        continue;
+      }
+    }
+    
+    console.log(`Updated ${updatedWallets} user wallets`);
     return true;
   } catch (error) {
     console.error('Error processing bets:', error);
