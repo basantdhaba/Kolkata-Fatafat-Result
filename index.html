@@ -3,68 +3,64 @@
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-analytics.js";
   import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
 
-  // Firebase Configuration
+  // ✅ REPLACE THESE VALUES with your actual Firebase config
   const firebaseConfig = {
-    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-    appId: import.meta.env.VITE_FIREBASE_APP_ID,
-    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+    apiKey: "YOUR_FIREBASE_API_KEY",
+    authDomain: "YOUR_FIREBASE_AUTH_DOMAIN",
+    projectId: "YOUR_FIREBASE_PROJECT_ID",
+    storageBucket: "YOUR_FIREBASE_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_FIREBASE_MESSAGING_SENDER_ID",
+    appId: "YOUR_FIREBASE_APP_ID",
+    measurementId: "YOUR_FIREBASE_MEASUREMENT_ID"
   };
 
   // Initialize Firebase
   const app = initializeApp(firebaseConfig);
   const analytics = getAnalytics(app);
-
-  // Initialize Firebase Authentication and get a reference to the service
   const auth = getAuth(app);
 
   // Function to handle sign up
-  const signUp = (email, password) => {
+  window.signUp = () => {
+    const email = document.getElementById("signup-email").value;
+    const password = document.getElementById("signup-password").value;
+
     createUserWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
-        // Signed up
-        const user = userCredential.user;
-        console.log('User signed up:', user);
+        console.log('User signed up:', userCredential.user);
+        alert("Signup successful!");
       })
       .catch((error) => {
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        console.error('Error signing up:', errorCode, errorMessage);
+        console.error('Error signing up:', error.message);
+        alert("Signup error: " + error.message);
       });
   };
 
   // Function to handle login
-  const login = (email, password) => {
+  window.login = () => {
+    const email = document.getElementById("login-email").value;
+    const password = document.getElementById("login-password").value;
+
     signInWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
-        // Logged in
-        const user = userCredential.user;
-        console.log('User logged in:', user);
+        console.log('User logged in:', userCredential.user);
+        alert("Login successful!");
       })
       .catch((error) => {
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        console.error('Error logging in:', errorCode, errorMessage);
+        console.error('Error logging in:', error.message);
+        alert("Login error: " + error.message);
       });
   };
 
   // Function to handle logout
-  const logout = () => {
+  window.logout = () => {
     signOut(auth)
       .then(() => {
-        // Logged out
         console.log('User logged out');
+        alert("Logout successful!");
       })
       .catch((error) => {
-        console.error('Error logging out:', error);
+        console.error('Error logging out:', error.message);
+        alert("Logout error: " + error.message);
       });
   };
-
-  // Example usage:
-  // signUp('test@example.com', 'password123');
-  // login('test@example.com', 'password123');
-  // logout();
 </script>
